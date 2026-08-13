@@ -1,5 +1,18 @@
 # HTML Hello
 
+## Project Entry Point
+
+- The dashboard is served from `index.html`.
+- `dashboard.html` is deprecated and only redirects to `index.html` to avoid duplicate sources.
+
+Run locally with:
+
+```bash
+pip3 install flask && python3 server.py
+```
+
+Open `http://127.0.0.1:3000/`.
+
 The most basic boilerplate for any 4Geeks Academy student, start your very first website from scratch.
 
 > There is a video tutorial on [how to use this template to create your very first website here](https://youtu.be/dfbDCMu_p-0).

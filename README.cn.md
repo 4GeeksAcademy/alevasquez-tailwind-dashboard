@@ -1,5 +1,18 @@
 # HTML Hello
 
+## 项目入口
+
+- 仪表盘以 `index.html` 作为唯一入口。
+- `dashboard.html` 已弃用，仅用于重定向到 `index.html`，避免双份来源。
+
+本地运行：
+
+```sh
+pip3 install flask && python3 server.py
+```
+
+打开 `http://127.0.0.1:3000/`。
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/4GeeksAcademy/html-hello.git)
 
 为使用 [gitpod.io](gitpod.io) 代码编辑器 4Geeks Academy 学生提供的最基础的样板。

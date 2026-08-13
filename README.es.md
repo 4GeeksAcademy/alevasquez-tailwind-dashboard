@@ -1,5 +1,18 @@
 # HTML Hello
 
+## Punto de entrada del proyecto
+
+- El dashboard se sirve desde `index.html`.
+- `dashboard.html` está deprecado y solo redirige a `index.html` para evitar fuentes duplicadas.
+
+Ejecución local:
+
+```bash
+pip3 install flask && python3 server.py
+```
+
+Abre `http://127.0.0.1:3000/`.
+
 El boilerplate más básico para cualquier estudiante de 4Geeks Academy, empieza tu primer sitio web desde cero.
 
 > Tienes un video tutorial sobre [cómo usar esta plantilla para crear tu primer sitio web aquí](https://youtu.be/dfbDCMu_p-0).

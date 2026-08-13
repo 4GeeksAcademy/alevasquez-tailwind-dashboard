@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
+  <style>
+    :root {
+      --bg-canvas: #f3f7f4;
+      --bg-panel: #ffffff;
+      --ink-main: #1f2937;
+    }
+
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(circle at top right, #d1fae5 0%, transparent 42%),
+        radial-gradient(circle at top left, #e2e8f0 0%, transparent 36%),
+        var(--bg-canvas);
+      color: var(--ink-main);
+    }
+
+    .card-surface {
+      background-color: var(--bg-panel);
+      border: 1px solid #dbe5e1;
+      box-shadow: 0 0.375rem 1.5rem rgba(15, 23, 42, 0.05);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .tab-link,
+    .channel-filter-btn {
+      border: 1px solid #dbe5e1;
+      background: #ffffff;
+      color: #475569;
+    }
+
+    .tab-link[aria-selected="true"],
+    .channel-filter-btn[aria-pressed="true"] {
+      border-color: #0f766e;
+      background: #ccfbf1;
+      color: #115e59;
+    }
+
+    .focus-ring:focus-visible {
+      outline: 2px solid #0f766e;
+      outline-offset: 2px;
+    }
+
+    .metric-value {
+      font-variant-numeric: tabular-nums;
+    }
+
+    table.charts-css {
+      --labels-size: 7.5rem;
+      --color: #0f766e;
+      font-size: 0.92rem;
+    }
+
+    table.charts-css .data {
+      font-weight: 600;
+    }
+
+    .funnel-chart {
+      --labels-size: 9rem;
+    }
+
+    .funnel-chart tbody tr:nth-child(1) td { --color: rgb(5 150 105 / 0.95); }
+    .funnel-chart tbody tr:nth-child(2) td { --color: rgb(5 150 105 / 0.82); }
+    .funnel-chart tbody tr:nth-child(3) td { --color: rgb(5 150 105 / 0.68); }
+    .funnel-chart tbody tr:nth-child(4) td { --color: rgb(5 150 105 / 0.54); }
+    .funnel-chart tbody tr:nth-child(5) td { --color: rgb(5 150 105 / 0.4); }
+
+    .quality-chart {
+      --labels-size: 12.75rem;
+      min-width: 34rem;
+    }
+
+    .quality-chart tbody th {
+      line-height: 1.2;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      word-break: normal;
+      overflow-wrap: normal;
+      hyphens: none;
+      overflow: visible;
+      padding-inline-start: 0.35rem;
+      padding-inline-end: 1rem;
+    }
+
+    .product-performance-chart {
+      --labels-size: 13rem;
+      min-width: 30rem;
+    }
+
+    .product-performance-chart tbody th {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+      word-break: normal;
+      overflow-wrap: normal;
+      hyphens: none;
+      overflow: visible;
+      padding-inline-start: 0.35rem;
+      padding-inline-end: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      table.charts-css {
+        --labels-size: 6.5rem;
+        font-size: 0.84rem;
+      }
+
+      .funnel-chart {
+        --labels-size: 7.75rem;
+      }
+
+      .quality-chart {
+        --labels-size: 11.5rem;
+        min-width: 28.5rem;
+      }
+
+      .quality-chart tbody th {
+        font-size: 0.8rem;
+        padding-inline-start: 0.25rem;
+        padding-inline-end: 0.8rem;
+      }
+
+      .product-performance-chart {
+        --labels-size: 11.75rem;
+        min-width: 28.5rem;
+      }
+
+      .product-performance-chart tbody th {
+        font-size: 0.8rem;
+        padding-inline-start: 0.25rem;
+        padding-inline-end: 0.8rem;
+      }
+    }
+
+    .quality-chart tbody tr:nth-child(1) td { --color: rgb(37 99 235 / 0.9); }
+    .quality-chart tbody tr:nth-child(2) td { --color: rgb(37 99 235 / 0.7); }
+    .quality-chart tbody tr:nth-child(3) td { --color: rgb(37 99 235 / 0.52); }
+
+    .channel-instagram td { --color: rgb(147 51 234 / 0.65); }
+    .channel-instagram td:nth-of-type(1) { --color: rgb(147 51 234 / 0.45); }
+    .channel-instagram td:nth-of-type(2) { --color: rgb(147 51 234 / 0.6); }
+    .channel-instagram td:nth-of-type(3) { --color: rgb(147 51 234 / 0.75); }
+    .channel-instagram td:nth-of-type(4) { --color: rgb(147 51 234 / 0.9); }
+
+    .channel-tiktok td { --color: rgb(249 115 22 / 0.65); }
+    .channel-tiktok td:nth-of-type(1) { --color: rgb(249 115 22 / 0.45); }
+    .channel-tiktok td:nth-of-type(2) { --color: rgb(249 115 22 / 0.6); }
+    .channel-tiktok td:nth-of-type(3) { --color: rgb(249 115 22 / 0.75); }
+    .channel-tiktok td:nth-of-type(4) { --color: rgb(249 115 22 / 0.9); }
+
+    .channel-youtube td { --color: rgb(239 68 68 / 0.65); }
+    .channel-youtube td:nth-of-type(1) { --color: rgb(239 68 68 / 0.45); }
+    .channel-youtube td:nth-of-type(2) { --color: rgb(239 68 68 / 0.6); }
+    .channel-youtube td:nth-of-type(3) { --color: rgb(239 68 68 / 0.75); }
+    .channel-youtube td:nth-of-type(4) { --color: rgb(239 68 68 / 0.9); }
+
+    .channel-row[hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="min-h-screen">
+    <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur-sm">
+      <div class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">Growth Operations</p>
+            <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">KPI Performance Dashboard</h1>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800">Last 30 days</span>
+            <button class="focus-ring rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Export report</button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Channel filters">
+            <button class="channel-filter-btn focus-ring rounded-lg px-3 py-1.5 text-xs font-semibold" type="button" data-channel-filter="all" aria-pressed="true">All Channels</button>
+            <button class="channel-filter-btn focus-ring rounded-lg px-3 py-1.5 text-xs font-semibold" type="button" data-channel-filter="instagram" aria-pressed="false">Instagram</button>
+            <button class="channel-filter-btn focus-ring rounded-lg px-3 py-1.5 text-xs font-semibold" type="button" data-channel-filter="tiktok" aria-pressed="false">TikTok</button>
+            <button class="channel-filter-btn focus-ring rounded-lg px-3 py-1.5 text-xs font-semibold" type="button" data-channel-filter="youtube" aria-pressed="false">YouTube</button>
+          </div>
+          <p class="text-xs font-medium text-slate-600">Viewing: <span id="active-channel-label" class="font-semibold text-slate-900">All Channels</span></p>
+        </div>
+
+        <nav aria-label="Dashboard tabs" role="tablist">
+          <ul class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <li><a id="tab-link-outcomes" class="tab-link focus-ring block rounded-xl px-3 py-2 text-center text-sm font-semibold" href="#outcomes" role="tab" aria-controls="outcomes" aria-selected="true" data-tab="outcomes">Outcomes</a></li>
+            <li><a id="tab-link-drivers" class="tab-link focus-ring block rounded-xl px-3 py-2 text-center text-sm font-semibold" href="#drivers" role="tab" aria-controls="drivers" aria-selected="false" data-tab="drivers">Drivers</a></li>
+            <li><a id="tab-link-operations" class="tab-link focus-ring block rounded-xl px-3 py-2 text-center text-sm font-semibold" href="#operations" role="tab" aria-controls="operations" aria-selected="false" data-tab="operations">Operations</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+      <main id="main-content">
+        <section id="outcomes" class="tab-panel active space-y-4" role="tabpanel" aria-labelledby="tab-link-outcomes">
+          <header>
+            <h2 class="text-lg font-bold text-slate-900 sm:text-xl">Top Block: Main Outcome Indicators</h2>
+            <p class="text-sm text-slate-600">Channel-aware KPI summary.</p>
+          </header>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Volume</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Sales <span class="metric-value block text-lg font-bold" data-base="12480">12,480</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Sign-ups <span class="metric-value block text-lg font-bold" data-base="4920">4,920</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Active users <span class="metric-value block text-lg font-bold" data-base="18300">18,300</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Impressions <span class="metric-value block text-lg font-bold" data-base="1200000">1.2M</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Revenue</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Revenue <span class="metric-value block text-lg font-bold" data-base="248000" data-prefix="$">$248K</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">MRR <span class="metric-value block text-lg font-bold" data-base="62000" data-prefix="$">$62K</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Avg selling price <span class="metric-value block text-lg font-bold" data-base="84" data-prefix="$">$84</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Engagement</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Engagement rate <span class="block text-lg font-bold">7.8%</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Total interactions <span class="metric-value block text-lg font-bold" data-base="95400">95,400</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Conversion rate <span class="block text-lg font-bold">4.3%</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Retention</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Churn rate <span class="block text-lg font-bold">2.6%</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Persistence <span class="block text-lg font-bold">81.2%</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Completion rate <span class="block text-lg font-bold">73.9%</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Performance</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Total conversions <span class="metric-value block text-lg font-bold" data-base="8120">8,120</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">CTR <span class="block text-lg font-bold">3.9%</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Conversion rate <span class="block text-lg font-bold">4.3%</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Satisfaction</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">NPS <span class="block text-lg font-bold">48</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">CSAT <span class="block text-lg font-bold">88%</span></p>
+              </div>
+            </article>
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="text-sm font-semibold text-slate-800">Efficiency</h3>
+              <div class="mt-3 grid gap-2">
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Cost per outcome <span class="metric-value block text-lg font-bold" data-base="12" data-prefix="$">$12</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Margin <span class="block text-lg font-bold">34%</span></p>
+                <p class="rounded-xl bg-slate-50 p-3 text-sm">Lead time <span class="block text-lg font-bold">2.8d</span></p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="drivers" class="tab-panel space-y-4" role="tabpanel" aria-labelledby="tab-link-drivers" aria-hidden="true">
+          <header>
+            <h2 class="text-lg font-bold text-slate-900 sm:text-xl">Middle Block: Drivers</h2>
+            <p class="text-sm text-slate-600">Funnel and quality adapt to selected channel.</p>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600" aria-label="Channel color legend">
+              <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                <span class="h-2.5 w-2.5 rounded-full" style="background: rgb(147 51 234);"></span>
+                Instagram
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                <span class="h-2.5 w-2.5 rounded-full" style="background: rgb(249 115 22);"></span>
+                TikTok
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+                <span class="h-2.5 w-2.5 rounded-full" style="background: rgb(239 68 68);"></span>
+                YouTube
+              </span>
+            </div>
+          </header>
+          <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Conversion by stage (sales funnel)</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css bar show-labels show-primary-axis show-4-secondary-axes data-spacing-4 w-full funnel-chart">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Green opacity scale per stage</caption>
+                  <thead><tr><th scope="col">Stage</th><th scope="col">Rate</th></tr></thead>
+                  <tbody>
+                    <tr><th scope="row">Visit</th><td id="funnel-visit" style="--size: 1.0;"><span class="data">100%</span></td></tr>
+                    <tr><th scope="row">Lead</th><td id="funnel-lead" style="--size: 0.56;"><span class="data">56%</span></td></tr>
+                    <tr><th scope="row">Qualified</th><td id="funnel-qualified" style="--size: 0.31;"><span class="data">31%</span></td></tr>
+                    <tr><th scope="row">Proposal</th><td id="funnel-proposal" style="--size: 0.18;"><span class="data">18%</span></td></tr>
+                    <tr><th scope="row">Closed</th><td id="funnel-closed" style="--size: 0.09;"><span class="data">9%</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-3 sm:p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Quality metrics</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css bar show-labels show-primary-axis show-4-secondary-axes data-spacing-4 w-full quality-chart">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Blue opacity scale per metric</caption>
+                  <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+                  <tbody>
+                    <tr><th scope="row">Qualified leads</th><td id="quality-qualified" style="--size: 0.62;"><span class="data">62%</span></td></tr>
+                    <tr><th scope="row">Attendance</th><td id="quality-attendance" style="--size: 0.78;"><span class="data">78%</span></td></tr>
+                    <tr><th scope="row">Pass rate</th><td id="quality-pass" style="--size: 0.69;"><span class="data">69%</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Performance by platform</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css column show-labels show-primary-axis show-4-secondary-axes data-spacing-6 w-full">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Color by channel</caption>
+                  <thead><tr><th scope="col">Platform</th><th scope="col">Index</th></tr></thead>
+                  <tbody>
+                    <tr class="channel-instagram channel-row" data-channel="instagram"><th scope="row">Instagram</th><td style="--size: 0.74;"><span class="data">74</span></td></tr>
+                    <tr class="channel-tiktok channel-row" data-channel="tiktok"><th scope="row">TikTok</th><td style="--size: 0.81;"><span class="data">81</span></td></tr>
+                    <tr class="channel-youtube channel-row" data-channel="youtube"><th scope="row">YouTube</th><td style="--size: 0.67;"><span class="data">67</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Engagement by platform</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css bar show-labels show-primary-axis show-4-secondary-axes multiple data-spacing-4 w-full">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Same channel, multiple opacity levels</caption>
+                  <thead>
+                    <tr><th scope="col">Platform</th><th scope="col">Likes</th><th scope="col">Comments</th><th scope="col">Shares</th><th scope="col">Saves</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr class="channel-instagram channel-row" data-channel="instagram"><th scope="row">Instagram</th><td style="--size: 0.82;"><span class="data">82</span></td><td style="--size: 0.59;"><span class="data">59</span></td><td style="--size: 0.63;"><span class="data">63</span></td><td style="--size: 0.71;"><span class="data">71</span></td></tr>
+                    <tr class="channel-tiktok channel-row" data-channel="tiktok"><th scope="row">TikTok</th><td style="--size: 0.88;"><span class="data">88</span></td><td style="--size: 0.44;"><span class="data">44</span></td><td style="--size: 0.79;"><span class="data">79</span></td><td style="--size: 0.47;"><span class="data">47</span></td></tr>
+                    <tr class="channel-youtube channel-row" data-channel="youtube"><th scope="row">YouTube</th><td style="--size: 0.55;"><span class="data">55</span></td><td style="--size: 0.61;"><span class="data">61</span></td><td style="--size: 0.42;"><span class="data">42</span></td><td style="--size: 0.39;"><span class="data">39</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-3 sm:p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Performance by product</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css bar show-labels show-primary-axis show-4-secondary-axes data-spacing-4 w-full product-performance-chart">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Product performance index by channel</caption>
+                  <thead>
+                    <tr><th scope="col">Product</th><th scope="col">Index</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr class="channel-row" data-channel="instagram"><th scope="row">Starter Course</th><td style="--size: 0.39;"><span class="data">39</span></td></tr>
+                    <tr class="channel-row" data-channel="tiktok"><th scope="row">Pro Bootcamp</th><td style="--size: 0.67;"><span class="data">67</span></td></tr>
+                    <tr class="channel-row" data-channel="youtube"><th scope="row">Enterprise Plan</th><td style="--size: 0.72;"><span class="data">72</span></td></tr>
+                    <tr class="channel-row" data-channel="all"><th scope="row">Mentorship</th><td style="--size: 0.58;"><span class="data">58</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Activity by platform</h3>
+              <div class="overflow-x-auto">
+                <table class="charts-css column show-labels show-primary-axis show-4-secondary-axes multiple data-spacing-5 w-full">
+                  <caption class="mb-3 text-left text-xs text-slate-500">Posts, stories, reels and videos by channel</caption>
+                  <thead>
+                    <tr><th scope="col">Platform</th><th scope="col">Posts</th><th scope="col">Stories</th><th scope="col">Reels / Videos</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr class="channel-instagram channel-row" data-channel="instagram"><th scope="row">Instagram</th><td style="--size: 0.64;"><span class="data">64</span></td><td style="--size: 0.88;"><span class="data">88</span></td><td style="--size: 0.76;"><span class="data">76</span></td></tr>
+                    <tr class="channel-tiktok channel-row" data-channel="tiktok"><th scope="row">TikTok</th><td style="--size: 0.58;"><span class="data">58</span></td><td style="--size: 0.34;"><span class="data">34</span></td><td style="--size: 0.91;"><span class="data">91</span></td></tr>
+                    <tr class="channel-youtube channel-row" data-channel="youtube"><th scope="row">YouTube</th><td style="--size: 0.24;"><span class="data">24</span></td><td style="--size: 0.12;"><span class="data">12</span></td><td style="--size: 0.52;"><span class="data">52</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="operations" class="tab-panel space-y-4" role="tabpanel" aria-labelledby="tab-link-operations" aria-hidden="true">
+          <header>
+            <h2 class="text-lg font-bold text-slate-900 sm:text-xl">Bottom Block: Operational Details</h2>
+            <p class="text-sm text-slate-600">Rows and alerts are filtered by selected channel.</p>
+          </header>
+
+          <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Products table</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                    <tr><th class="py-2 pr-3" scope="col">Product</th><th class="py-2 pr-3" scope="col">Price</th><th class="py-2 pr-3" scope="col">Commissions</th><th class="py-2 pr-3" scope="col">Conversions</th><th class="py-2" scope="col">ROI</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tr class="channel-row" data-channel="instagram"><th class="py-2 pr-3 font-medium" scope="row">Starter Course</th><td class="py-2 pr-3">$49</td><td class="py-2 pr-3">$24,500</td><td class="py-2 pr-3">500</td><td class="py-2">2.9x</td></tr>
+                    <tr class="channel-row" data-channel="tiktok"><th class="py-2 pr-3 font-medium" scope="row">Pro Bootcamp</th><td class="py-2 pr-3">$149</td><td class="py-2 pr-3">$78,200</td><td class="py-2 pr-3">525</td><td class="py-2">3.4x</td></tr>
+                    <tr class="channel-row" data-channel="all"><th class="py-2 pr-3 font-medium" scope="row">Mentorship</th><td class="py-2 pr-3">$99</td><td class="py-2 pr-3">$43,100</td><td class="py-2 pr-3">435</td><td class="py-2">2.6x</td></tr>
+                    <tr class="channel-row" data-channel="youtube"><th class="py-2 pr-3 font-medium" scope="row">Enterprise Plan</th><td class="py-2 pr-3">$399</td><td class="py-2 pr-3">$102,800</td><td class="py-2 pr-3">258</td><td class="py-2">4.1x</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Platforms table</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                    <tr><th class="py-2 pr-3" scope="col">Platform</th><th class="py-2 pr-3" scope="col">Reach</th><th class="py-2 pr-3" scope="col">Engagement</th><th class="py-2 pr-3" scope="col">Conversions</th><th class="py-2" scope="col">Best metric</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tr class="channel-row" data-channel="instagram"><th class="py-2 pr-3 font-medium" scope="row">Instagram</th><td class="py-2 pr-3">430K</td><td class="py-2 pr-3">8.3%</td><td class="py-2 pr-3">2,840</td><td class="py-2">CSAT impact</td></tr>
+                    <tr class="channel-row" data-channel="tiktok"><th class="py-2 pr-3 font-medium" scope="row">TikTok</th><td class="py-2 pr-3">520K</td><td class="py-2 pr-3">9.1%</td><td class="py-2 pr-3">3,190</td><td class="py-2">CTR</td></tr>
+                    <tr class="channel-row" data-channel="youtube"><th class="py-2 pr-3 font-medium" scope="row">YouTube</th><td class="py-2 pr-3">250K</td><td class="py-2 pr-3">6.4%</td><td class="py-2 pr-3">2,090</td><td class="py-2">NPS uplift</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Campaigns table</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                    <tr><th class="py-2 pr-3" scope="col">Campaign</th><th class="py-2 pr-3" scope="col">Range</th><th class="py-2 pr-3" scope="col">Products promoted</th><th class="py-2 pr-3" scope="col">Results</th><th class="py-2" scope="col">Performance</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tr class="channel-row" data-channel="instagram"><th class="py-2 pr-3 font-medium" scope="row">Back to School Launch</th><td class="py-2 pr-3">Aug 1 - Aug 10</td><td class="py-2 pr-3">Starter, Pro Bootcamp</td><td class="py-2 pr-3">1,840 conversions</td><td class="py-2">High</td></tr>
+                    <tr class="channel-row" data-channel="tiktok"><th class="py-2 pr-3 font-medium" scope="row">Creator Sprint</th><td class="py-2 pr-3">Aug 5 - Aug 18</td><td class="py-2 pr-3">Mentorship</td><td class="py-2 pr-3">920 conversions</td><td class="py-2">Medium</td></tr>
+                    <tr class="channel-row" data-channel="youtube"><th class="py-2 pr-3 font-medium" scope="row">Enterprise Week</th><td class="py-2 pr-3">Aug 8 - Aug 20</td><td class="py-2 pr-3">Enterprise Plan</td><td class="py-2 pr-3">390 conversions</td><td class="py-2">High</td></tr>
+                    <tr class="channel-row" data-channel="all"><th class="py-2 pr-3 font-medium" scope="row">Retention Booster</th><td class="py-2 pr-3">Aug 2 - Aug 22</td><td class="py-2 pr-3">All products</td><td class="py-2 pr-3">Churn down 0.3pp</td><td class="py-2">Positive</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2" id="alerts">
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Alerts</h3>
+              <ul class="space-y-2 text-sm">
+                <li class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700 channel-row" data-channel="youtube">Critical: Conversion dropped 18% on YouTube for Enterprise Plan in last 48h.</li>
+                <li class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-700 channel-row" data-channel="all">Warning: Funnel stage Lead to Qualified decreased from 34% to 31%.</li>
+                <li class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700 channel-row" data-channel="tiktok">Spike: TikTok CTR increased to 4.7% after Creator Sprint assets.</li>
+                <li class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700 channel-row" data-channel="instagram">Anomaly: CSAT dipped in weekend support window, review response time.</li>
+              </ul>
+            </article>
+
+            <article class="card-surface rounded-2xl p-4">
+              <h3 class="mb-3 text-sm font-semibold text-slate-700">Lists with filters</h3>
+              <div class="mb-3 flex flex-wrap gap-2 text-xs">
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">30d</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">All markets</span>
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700">Revenue first</span>
+              </div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <section class="rounded-xl bg-slate-50 p-3">
+                  <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Top products</h4>
+                  <ol class="mt-2 space-y-1 text-sm text-slate-700">
+                    <li class="channel-row" data-channel="youtube">1. Enterprise Plan</li>
+                    <li class="channel-row" data-channel="tiktok">2. Pro Bootcamp</li>
+                    <li class="channel-row" data-channel="all">3. Mentorship</li>
+                  </ol>
+                </section>
+                <section class="rounded-xl bg-slate-50 p-3">
+                  <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Top platforms</h4>
+                  <ol class="mt-2 space-y-1 text-sm text-slate-700">
+                    <li class="channel-row" data-channel="tiktok">1. TikTok</li>
+                    <li class="channel-row" data-channel="instagram">2. Instagram</li>
+                    <li class="channel-row" data-channel="youtube">3. YouTube</li>
+                  </ol>
+                </section>
+                <section class="rounded-xl bg-slate-50 p-3">
+                  <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Top campaigns</h4>
+                  <ol class="mt-2 space-y-1 text-sm text-slate-700">
+                    <li class="channel-row" data-channel="instagram">1. Back to School Launch</li>
+                    <li class="channel-row" data-channel="youtube">2. Enterprise Week</li>
+                    <li class="channel-row" data-channel="all">3. Retention Booster</li>
+                  </ol>
+                </section>
+                <section class="rounded-xl bg-slate-50 p-3">
+                  <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-600">Improvement opportunities</h4>
+                  <ul class="mt-2 space-y-1 text-sm text-slate-700">
+                    <li class="channel-row" data-channel="youtube">Improve YouTube CTA clarity</li>
+                    <li class="channel-row" data-channel="instagram">Raise lead qualification scripts</li>
+                    <li class="channel-row" data-channel="all">Reduce weekend support latency</li>
+                  </ul>
+                </section>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+      const links = Array.from(document.querySelectorAll('[data-tab]'));
+      const channelButtons = Array.from(document.querySelectorAll('[data-channel-filter]'));
+      const channelRows = Array.from(document.querySelectorAll('.channel-row'));
+      const channelLabel = document.getElementById('active-channel-label');
+      const metricValues = Array.from(document.querySelectorAll('.metric-value[data-base]'));
+
+      const funnelCells = {
+        visit: document.getElementById('funnel-visit'),
+        lead: document.getElementById('funnel-lead'),
+        qualified: document.getElementById('funnel-qualified'),
+        proposal: document.getElementById('funnel-proposal'),
+        closed: document.getElementById('funnel-closed')
+      };
+
+      const qualityCells = {
+        qualified: document.getElementById('quality-qualified'),
+        attendance: document.getElementById('quality-attendance'),
+        pass: document.getElementById('quality-pass')
+      };
+
+      const channelData = {
+        all: { label: 'All Channels', multiplier: 1, funnel: [100, 56, 31, 18, 9], quality: [62, 78, 69] },
+        instagram: { label: 'Instagram', multiplier: 0.92, funnel: [100, 60, 35, 21, 11], quality: [68, 82, 74] },
+        tiktok: { label: 'TikTok', multiplier: 1.08, funnel: [100, 58, 33, 19, 10], quality: [64, 79, 71] },
+        youtube: { label: 'YouTube', multiplier: 0.84, funnel: [100, 49, 25, 14, 7], quality: [57, 72, 63] }
+      };
+
+      function activateTab(tabId) {
+        const validId = panels.some((panel) => panel.id === tabId) ? tabId : 'outcomes';
+        panels.forEach((panel) => {
+          const isActive = panel.id === validId;
+          panel.classList.toggle('active', isActive);
+          panel.setAttribute('aria-hidden', String(!isActive));
+        });
+        links.forEach((link) => {
+          link.setAttribute('aria-selected', String(link.dataset.tab === validId));
+        });
+      }
+
+      function formatCompact(value, prefix = '') {
+        if (value >= 1000000) return `${prefix}${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000 && prefix) return `${prefix}${Math.round(value / 1000)}K`;
+        if (value >= 1000) return Math.round(value).toLocaleString();
+        return `${prefix}${Math.round(value)}`;
+      }
+
+      function setChartCell(cell, value) {
+        if (!cell) return;
+        cell.style.setProperty('--size', `${value / 100}`);
+        const dataNode = cell.querySelector('.data');
+        if (dataNode) dataNode.textContent = `${value}%`;
+      }
+
+      function applyChannel(channel) {
+        const active = channelData[channel] ? channel : 'all';
+        const current = channelData[active];
+
+        channelButtons.forEach((btn) => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.channelFilter === active));
+        });
+
+        if (channelLabel) channelLabel.textContent = current.label;
+
+        metricValues.forEach((node) => {
+          const base = Number(node.dataset.base);
+          const prefix = node.dataset.prefix || '';
+          if (Number.isNaN(base)) return;
+          node.textContent = formatCompact(base * current.multiplier, prefix);
+        });
+
+        setChartCell(funnelCells.visit, current.funnel[0]);
+        setChartCell(funnelCells.lead, current.funnel[1]);
+        setChartCell(funnelCells.qualified, current.funnel[2]);
+        setChartCell(funnelCells.proposal, current.funnel[3]);
+        setChartCell(funnelCells.closed, current.funnel[4]);
+
+        setChartCell(qualityCells.qualified, current.quality[0]);
+        setChartCell(qualityCells.attendance, current.quality[1]);
+        setChartCell(qualityCells.pass, current.quality[2]);
+
+        channelRows.forEach((row) => {
+          const rowChannel = row.dataset.channel || 'all';
+          row.hidden = !(active === 'all' || rowChannel === 'all' || rowChannel === active);
+        });
+      }
+
+      function syncFromHash() {
+        const hash = window.location.hash.replace('#', '');
+        activateTab(hash || 'outcomes');
+      }
+
+      channelButtons.forEach((btn) => {
+        btn.addEventListener('click', () => applyChannel(btn.dataset.channelFilter || 'all'));
+      });
+
+      window.addEventListener('hashchange', syncFromHash);
+      syncFromHash();
+      applyChannel('all');
+    })();
+  </script>
+</body>
+</html>
